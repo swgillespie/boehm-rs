@@ -1,13 +1,17 @@
 #![crate_type="rlib"]
 #![feature(globs, macro_rules)]
 
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_camel_case_types)]
+#![allow(missing_copy_implementations)]
+#![allow(improper_ctypes)]
+
 extern crate libc;
 use std::mem;
 use std::kinds::marker;
 use std::intrinsics;
 
-#[allow(dead_code)]
-#[allow(non_camel_case_types)]
 pub mod ffi;
 
 pub mod tracing;
@@ -56,7 +60,7 @@ impl<T: 'static> Gc<T> {
                 ffi::GC_malloc(size)
             } as *mut T;
             if p.is_null() {
-                fail!("Could not allocate")
+                panic!("Could not allocate")
             }
             intrinsics::move_val_init(&mut *p, value);
             Gc { ptr: p, mark: marker::NoSend }

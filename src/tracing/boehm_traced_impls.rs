@@ -49,7 +49,7 @@ impl<T: BoehmTraced> BoehmTraced for cell::RefCell<T> {
     fn indicate_ptr_words(_dummy: Option<cell::RefCell<T>>, words: &mut [bool]) {
         let l = words.len();
         // the last word is not a pointer, and is not part of the `T`.
-        BoehmTraced::indicate_ptr_words(None::<T>, words.mut_slice_to(l - 1));
+        BoehmTraced::indicate_ptr_words(None::<T>, words.slice_to_mut(l - 1));
     }
 }
 
@@ -62,7 +62,7 @@ impl<T: BoehmTraced> BoehmTraced for Option<T> {
 
         if discr_size * 8 >= GC_WORDSZ() {
             // we have a proper discriminant, so T might contain pointers
-            BoehmTraced::indicate_ptr_words(None::<T>, words.mut_slice_from(1))
+            BoehmTraced::indicate_ptr_words(None::<T>, words.slice_from_mut(1))
         } else {
             // we don't have a big discriminant, so we're either a
             // nullable pointer, or a small non-word aligned type. (In
@@ -86,8 +86,8 @@ macro_rules! fixedvec {
                     let bits_per_step = 8 * mem::size_of::<[T, .. $n]>() / $n;
                     let words_per_step = bits_per_step / GC_WORDSZ();
                     if words_per_step > 0 {
-                        for chunk in words.mut_slice_to(words_per_step * $n)
-                            .mut_chunks(words_per_step) {
+                        for chunk in words.slice_to_mut(words_per_step * $n)
+                            .chunks_mut(words_per_step) {
                             BoehmTraced::indicate_ptr_words(None::<T>, chunk)
                         }
                     }
@@ -110,4 +110,4 @@ macro_rules! fixedvec_lots {
 // NB. this crashes rustdoc.
 //fixedvec_lots!([1u] [2u] [4u] [16u] [32u] [64u]; 0)
 // and some long ones
-fixedvec!(100u, 1000u, 10_000u, 100_000u, 1_000_000u)
+fixedvec!(100u, 1000u, 10_000u, 100_000u, 1_000_000u);
